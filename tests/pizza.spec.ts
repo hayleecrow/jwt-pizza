@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright-test-coverage';
+import { test, expect } from './testSetup';
 import { Page } from '@playwright/test';
 import { Role, User } from '../src/service/pizzaService';
 
