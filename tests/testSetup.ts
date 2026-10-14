@@ -1,4 +1,4 @@
-import { test as base, expect } from 'playwright-test-coverage';
+import { test as base, expect } from "playwright-test-coverage";
 
 interface Violation {
   method: string;
@@ -11,14 +11,20 @@ const test = base.extend({
     const violations: Violation[] = [];
 
     // Registered first so that mocks added later by tests take precedence.
-    await page.route('**/*', async (route) => {
+    await page.route("**/*", async (route) => {
       const request = route.request();
       const url = request.url();
 
-      if (url.startsWith('http://localhost:3000')) {
-        const violation = { method: request.method(), url, body: request.postData() };
+      if (url.startsWith("http://localhost:3000")) {
+        const violation = {
+          method: request.method(),
+          url,
+          body: request.postData(),
+        };
         violations.push(violation);
-        console.log(`Blocked request to http://localhost:3000 -> ${violation.method} ${violation.url} ${violation.body}`);
+        console.log(
+          `Blocked request to http://localhost:3000 -> ${violation.method} ${violation.url} ${violation.body}`,
+        );
         await route.abort();
         return;
       }
@@ -28,7 +34,10 @@ const test = base.extend({
 
     await use(page);
 
-    expect(violations, 'Unexpected request(s) made to http://localhost:3000').toEqual([]);
+    expect(
+      violations,
+      "Unexpected request(s) made to http://localhost:3000",
+    ).toEqual([]);
   },
 });
 
