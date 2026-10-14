@@ -11,6 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set_version.outputs.version }}
+    # MySQL for the real jwt-pizza-service that the integration tests start.
+    services:
+      mysql:
+        image: mysql:8.0.29
+        env:
+          MYSQL_ROOT_PASSWORD: tempdbpassword
+        ports:
+          - "3306:3306"
+        options: >-
+          --health-cmd "mysqladmin ping -ptempdbpassword" --health-interval 10s --health-start-period 10s --health-timeout 5s --health-retries 10
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -37,7 +47,40 @@ jobs:
         with:
           path: dist/
 
+      - name: Checkout jwt-pizza-service for integration tests
+        uses: actions/checkout@v4
+        with:
+          repository: hayleecrow/jwt-pizza-service
+          path: jwt-pizza-service
+
+      - name: Set up jwt-pizza-service
+        working-directory: jwt-pizza-service
+        run: |
+          npm ci
+          printf '{"version": "integration-test" }' > src/version.json
+          cat > src/config.js <<EOF
+          module.exports = {
+            jwtSecret: 'integration-test-secret',
+            db: {
+              connection: {
+                host: '127.0.0.1',
+                user: 'root',
+                password: 'tempdbpassword',
+                database: process.env.DB_NAME || 'pizza',
+                connectTimeout: 60000,
+              },
+              listPerPage: 10,
+            },
+            factory: {
+              url: 'https://pizza-factory.cs329.click',
+              apiKey: '${{ secrets.FACTORY_API_KEY }}',
+            },
+          };
+          EOF
+
       - name: Run tests
+        env:
+          SERVICE_DIR: ${{ github.workspace }}/jwt-pizza-service
         run: |
           npx playwright install --with-deps chromium
           npm run test:coverage
