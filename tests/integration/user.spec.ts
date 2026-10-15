@@ -149,3 +149,63 @@ test("update with a blank email is rejected", async ({ page }) => {
   await logoutAndLogin(page, email, password);
   await expect(page.getByRole("link", { name: "pd" })).toBeVisible();
 });
+
+// Gives the diner a unique name, then logs in as the default admin, filters the Users table down to that diner and returns their row.
+async function adminFindsUser(page: Page) {
+  const name = `del${Date.now()}${Math.floor(Math.random() * 100000)}`;
+  await editUser(page, { name });
+  await waitForDialogClosed(page);
+  await logout(page);
+  await login(page, "a@jwt.com", "admin");
+  await page.getByRole("link", { name: "Admin" }).click();
+  await page.getByPlaceholder("Filter users").fill(name);
+  await page.getByRole("button", { name: "Search" }).click();
+  return page.getByRole("row").filter({ hasText: email });
+}
+
+// AdminDashboard.deleteUser — the row disappears from the Users table
+test("admin deletes a user from the users table", async ({ page }) => {
+  const row = await adminFindsUser(page);
+  await expect(row).toContainText(email);
+
+  await Promise.all([
+    page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/user/") && r.request().method() === "DELETE",
+    ),
+    row.getByRole("button", { name: /Delete/ }).click(),
+  ]);
+
+  await expect(row).not.toBeVisible();
+});
+
+// AdminDashboard.deleteUser — the deleted user can no longer log in
+test("deleted user can no longer log in", async ({ page }) => {
+  const row = await adminFindsUser(page);
+  await Promise.all([
+    page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/user/") && r.request().method() === "DELETE",
+    ),
+    row.getByRole("button", { name: /Delete/ }).click(),
+  ]);
+
+  await logout(page);
+  await login(page, email, password);
+
+  await expect(page.getByRole("link", { name: "Logout" })).not.toBeVisible();
+});
+
+// AdminDashboard.deleteUser — an admin has no delete button on their own row
+test("admin cannot delete themselves", async ({ page }) => {
+  await logout(page);
+  await login(page, "a@jwt.com", "admin");
+  await page.getByRole("link", { name: "Admin" }).click();
+  await page.getByPlaceholder("Filter users").fill("常用名字");
+  await page.getByRole("button", { name: "Search" }).click();
+
+  await expect(page.getByRole("row", { name: /a@jwt.com/ })).toBeVisible();
+  await expect(
+    page.getByRole("row", { name: /a@jwt.com/ }).getByRole("button"),
+  ).toHaveCount(0);
+});

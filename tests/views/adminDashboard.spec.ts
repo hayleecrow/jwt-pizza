@@ -32,7 +32,9 @@ test("admin dashboard lists users", async ({ page }) => {
   await login(page, "a@jwt.com", "admin");
   await page.getByRole("link", { name: "Admin" }).click();
 
-  await expect(page.getByRole("cell", { name: "Kai Chen" })).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Kai Chen", exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("cell", { name: "d@jwt.com" })).toBeVisible();
   await expect(
     page.getByRole("row", { name: /Fran Chisee f@jwt.com diner, franchisee/ }),
@@ -48,7 +50,9 @@ test("admin dashboard filters users", async ({ page }) => {
   await page.getByPlaceholder("Filter users").fill("kai");
   await page.getByRole("button", { name: "Search" }).click();
 
-  await expect(page.getByRole("cell", { name: "Kai Chen" })).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Kai Chen", exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("cell", { name: "f@jwt.com" })).not.toBeVisible();
 });
 

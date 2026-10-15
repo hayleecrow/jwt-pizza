@@ -104,6 +104,10 @@ class HttpPizzaService implements PizzaService {
     return Promise.resolve(user);
   }
 
+  async deleteUser(user: User): Promise<void> {
+    return this.callEndpoint(`/api/user/${user.id}`, "DELETE");
+  }
+
   async getUsers(
     page: number = 1,
     limit: number = 10,

@@ -64,6 +64,11 @@ export default function AdminDashboard(props: Props) {
     });
   }
 
+  async function deleteUser(user: User) {
+    await pizzaService.deleteUser(user);
+    setUserList(await pizzaService.getUsers(userPage, 10, userFilter));
+  }
+
   async function filterFranchises() {
     setFranchiseList(
       await pizzaService.getFranchises(
@@ -221,7 +226,7 @@ export default function AdminDashboard(props: Props) {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="uppercase text-neutral-100 bg-slate-400 border-b-2 border-gray-500">
                 <tr>
-                  {["Name", "Email", "Role"].map((header) => (
+                  {["Name", "Email", "Role", ""].map((header) => (
                     <th
                       key={header}
                       scope="col"
@@ -243,6 +248,18 @@ export default function AdminDashboard(props: Props) {
                     </td>
                     <td className="px-6 py-1 text-sm text-gray-800">
                       {u.roles?.map((r) => r.role).join(", ")}
+                    </td>
+                    <td className="px-6 py-1 text-end">
+                      {String(u.id) !== String(props.user?.id) && (
+                        <button
+                          type="button"
+                          aria-label={`Delete ${u.name}`}
+                          className="px-2 text-sm font-semibold text-orange-400 hover:text-orange-800"
+                          onClick={() => deleteUser(u)}
+                        >
+                          ✕
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
