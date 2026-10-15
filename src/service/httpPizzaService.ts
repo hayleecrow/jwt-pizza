@@ -2,6 +2,7 @@ import {
   PizzaService,
   Franchise,
   FranchiseList,
+  UserList,
   Store,
   OrderHistory,
   User,
@@ -101,6 +102,16 @@ class HttpPizzaService implements PizzaService {
     );
     localStorage.setItem("token", token);
     return Promise.resolve(user);
+  }
+
+  async getUsers(
+    page: number = 1,
+    limit: number = 10,
+    nameFilter: string = "*",
+  ): Promise<UserList> {
+    return this.callEndpoint(
+      `/api/user?page=${page}&limit=${limit}&name=${nameFilter}`,
+    );
   }
 
   async getMenu(): Promise<Menu> {

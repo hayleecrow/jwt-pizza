@@ -26,6 +26,32 @@ test("admin dashboard filters franchises", async ({ page }) => {
   await expect(page.getByRole("cell", { name: "PizzaCorp" })).not.toBeVisible();
 });
 
+// AdminDashboard users — admin sees each user's name, email and role
+test("admin dashboard lists users", async ({ page }) => {
+  await basicInit(page);
+  await login(page, "a@jwt.com", "admin");
+  await page.getByRole("link", { name: "Admin" }).click();
+
+  await expect(page.getByRole("cell", { name: "Kai Chen" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "d@jwt.com" })).toBeVisible();
+  await expect(
+    page.getByRole("row", { name: /Fran Chisee f@jwt.com diner, franchisee/ }),
+  ).toBeVisible();
+});
+
+// AdminDashboard users — name filter narrows the list
+test("admin dashboard filters users", async ({ page }) => {
+  await basicInit(page);
+  await login(page, "a@jwt.com", "admin");
+  await page.getByRole("link", { name: "Admin" }).click();
+
+  await page.getByPlaceholder("Filter users").fill("kai");
+  await page.getByRole("button", { name: "Search" }).click();
+
+  await expect(page.getByRole("cell", { name: "Kai Chen" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "f@jwt.com" })).not.toBeVisible();
+});
+
 // AdminDashboard access control — a non-admin diner cannot see the dashboard
 test("non-admin cannot see admin dashboard", async ({ page }) => {
   await basicInit(page);

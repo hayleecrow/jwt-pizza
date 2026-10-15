@@ -92,6 +92,27 @@ export async function basicInit(
     await route.fulfill({ json: loggedInUser });
   });
 
+  // User list (GET), 2 per page so pagination is exercised
+  await page.route(/\/api\/user\?.*$/, async (route) => {
+    expect(route.request().method()).toBe("GET");
+    const url = new URL(route.request().url());
+    const filter = (url.searchParams.get("name") ?? "*")
+      .replace(/\*/g, "")
+      .toLowerCase();
+    const page = Number(url.searchParams.get("page"));
+    const limit = Number(url.searchParams.get("limit"));
+    const matches = Object.values(validUsers).filter((u) =>
+      u.name!.toLowerCase().includes(filter),
+    );
+    const start = (page - 1) * limit;
+    await route.fulfill({
+      json: {
+        users: matches.slice(start, start + limit),
+        more: matches.length > start + limit,
+      },
+    });
+  });
+
   await page.route("*/**/api/order/menu", async (route) => {
     const menuRes = [
       {

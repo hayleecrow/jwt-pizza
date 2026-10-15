@@ -75,6 +75,11 @@ type Franchise = {
   stores: Store[];
 };
 
+type UserList = {
+  users: User[];
+  more: boolean;
+};
+
 type FranchiseList = {
   franchises: Franchise[];
   more: boolean;
@@ -104,6 +109,7 @@ interface PizzaService {
   logout(): void;
   getUser(): Promise<User | null>;
   updateUser(user: User): Promise<User>;
+  getUsers(page: number, limit: number, nameFilter: string): Promise<UserList>;
   getMenu(): Promise<Menu>;
   getOrders(user: User): Promise<OrderHistory>;
   order(order: Order): Promise<OrderResponse>;
@@ -131,6 +137,7 @@ export {
   Order,
   Franchise,
   FranchiseList,
+  UserList,
   Store,
   OrderItem,
   Endpoint,

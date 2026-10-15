@@ -10,6 +10,7 @@ import {
   Role,
   Store,
   User,
+  UserList,
 } from "../service/pizzaService";
 import { TrashIcon } from "../icons";
 
@@ -25,6 +26,21 @@ export default function AdminDashboard(props: Props) {
   });
   const [franchisePage, setFranchisePage] = React.useState(0);
   const filterFranchiseRef = React.useRef<HTMLInputElement>(null);
+
+  const [userList, setUserList] = React.useState<UserList>({
+    users: [],
+    more: false,
+  });
+  const [userPage, setUserPage] = React.useState(1);
+  const [userFilter, setUserFilter] = React.useState("*");
+  const filterUserRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (!Role.isRole(props.user, Role.Admin)) return;
+    (async () => {
+      setUserList(await pizzaService.getUsers(userPage, 10, userFilter));
+    })();
+  }, [props.user, userPage, userFilter]);
 
   React.useEffect(() => {
     (async () => {
@@ -197,6 +213,81 @@ export default function AdminDashboard(props: Props) {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div className="text-start py-8 px-4 sm:px-6 lg:px-8">
+          <h3 className="text-neutral-100 text-xl">Users</h3>
+          <div className="bg-neutral-100 overflow-clip my-4">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="uppercase text-neutral-100 bg-slate-400 border-b-2 border-gray-500">
+                <tr>
+                  {["Name", "Email", "Role"].map((header) => (
+                    <th
+                      key={header}
+                      scope="col"
+                      className="px-6 py-3 text-start text-xs font-medium"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {userList.users.map((u) => (
+                  <tr key={u.id}>
+                    <td className="px-6 py-1 text-sm text-gray-800">
+                      {u.name}
+                    </td>
+                    <td className="px-6 py-1 text-sm text-gray-800">
+                      {u.email}
+                    </td>
+                    <td className="px-6 py-1 text-sm text-gray-800">
+                      {u.roles?.map((r) => r.role).join(", ")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td className="px-1 py-1" colSpan={2}>
+                    <input
+                      type="text"
+                      ref={filterUserRef}
+                      placeholder="Filter users"
+                      className="px-2 py-1 text-sm border border-gray-300 rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      className="ml-2 px-2 py-1 text-sm font-semibold rounded-lg border border-orange-400 text-orange-400 hover:border-orange-800 hover:text-orange-800"
+                      onClick={() => {
+                        setUserPage(1);
+                        setUserFilter(
+                          `*${filterUserRef.current?.value ?? ""}*`,
+                        );
+                      }}
+                    >
+                      Search
+                    </button>
+                  </td>
+                  <td className="text-end text-sm font-medium">
+                    <button
+                      className="w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300"
+                      onClick={() => setUserPage(userPage - 1)}
+                      disabled={userPage <= 1}
+                    >
+                      Prev
+                    </button>
+                    <button
+                      className="w-12 p-1 text-sm font-semibold rounded-lg border border-transparent bg-white text-grey border-grey m-1 hover:bg-orange-200 disabled:bg-neutral-300"
+                      onClick={() => setUserPage(userPage + 1)}
+                      disabled={!userList.more}
+                    >
+                      Next
+                    </button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
         <div>
